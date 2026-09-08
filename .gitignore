@@ -1,0 +1,19 @@
+# preprocessed datasets: rebuild with scripts/build_real_pickles.py (see README)
+*.pkl
+database/datasets/
+database/datasets_synth/
+database/raw_datasets_mesh/
+database/raw_datasets_dk15/
+*.zip
+*.nc
+*.pol
+*.xyz
+*.ist
+
+# runtime artefacts
+__pycache__/
+*.pyc
+lightning_logs/
+wandb/
+*.orig
+.ipynb_checkpoints/
