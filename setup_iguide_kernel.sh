@@ -1,9 +1,15 @@
 #!/bin/bash
 # Build the `mswegnn` Jupyter kernel on the I-GUIDE Platform JupyterHub (or any JupyterHub).
-# Run this from a terminal on the platform:  bash setup_iguide_kernel.sh [env_prefix]
+# Run this from a terminal on the platform:
+#   bash setup_iguide_kernel.sh                 # CPU build (default; the I-GUIDE hub has no GPU)
+#   bash setup_iguide_kernel.sh --cuda          # CUDA build, only if a GPU is actually present
+#   bash setup_iguide_kernel.sh [--cuda] PREFIX # install somewhere other than ~/envs/mswegnn
 set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="$REPO/environment-cpu.yml"
+if [ "${1:-}" = "--cuda" ]; then ENV_FILE="$REPO/environment.yml"; shift; fi
 ENV_PREFIX="${1:-$HOME/envs/mswegnn}"
+echo "using $(basename "$ENV_FILE") -> $ENV_PREFIX"
 
 echo "== 0. what the stock kernels already contain (read-only, on CVMFS) =="
 echo "   If one of them already has lightning==2.0.9.post0 AND torch_geometric,"
@@ -21,7 +27,7 @@ echo "== 1. free space in \$HOME (CUDA torch needs ~2.5 GB, CPU torch ~200 MB) =
 df -h "$HOME" | tail -1
 
 echo "== 2. build the environment =="
-conda env create -f "$REPO/environment.yml" -p "$ENV_PREFIX"
+conda env create -f "$ENV_FILE" -p "$ENV_PREFIX"
 
 echo "== 3. register it as a Jupyter kernel named 'mswegnn' =="
 # The name must match the kernelspec recorded in test_pretrained_EN.ipynb.
@@ -46,3 +52,6 @@ PY
 echo
 echo "Done. Reload the browser tab, open test_pretrained_EN.ipynb, and pick 'Python (mswegnn)'."
 echo "The notebook also needs database/datasets/{train,test}/*.pkl - see README."
+echo
+echo "CPU tip: this model is fastest at ~8 threads; more can be slower. If the container"
+echo "exposes many cores, run torch.set_num_threads(8) after the imports cell."

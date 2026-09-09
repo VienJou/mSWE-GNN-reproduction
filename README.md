@@ -63,11 +63,13 @@ split is used to fit the feature-normalisation scalers.
 
 ## Running the notebook
 
-`environment.yml` pins the exact set the notebook was executed with, reduced to what it
-actually needs:
+Two environment files pin the exact set the notebook was executed with, reduced to what it
+actually needs. Pick by whether you have a GPU:
 
 ```bash
-conda env create -f environment.yml -p ~/envs/mswegnn
+conda env create -f environment-cpu.yml -p ~/envs/mswegnn   # CPU, ~200 MB of torch
+# or
+conda env create -f environment.yml     -p ~/envs/mswegnn   # CUDA, ~2.5 GB of torch
 conda activate ~/envs/mswegnn
 jupyter lab test_pretrained_EN.ipynb
 ```
@@ -82,9 +84,30 @@ Two things about that file are worth knowing before you substitute your own:
   that `database/graph_creation.py` imports; the notebook uses just two plotting functions
   from it.
 
-The whole notebook takes about 20–25 minutes on one H100. On CPU, set
-`RUN_ALL_CHECKPOINTS=False` in section 4.1.5 to skip the 16-checkpoint sweep; the rest is
-tolerable.
+### Runtime, and running without a GPU
+
+A GPU is convenient, not required. Measured on an Intel Xeon Gold 6426Y, the same 20-simulation
+rollout the notebook performs in section 4.1.1:
+
+| Threads | Per simulation | 20 sims (§4.1.1) | 16 checkpoints × 20 sims (§4.1.5) |
+|---|---|---|---|
+| 4 | 16.6 s | 5.5 min | 88 min |
+| 8 | 8.6 s | **2.9 min** | **46 min** |
+| 64 | 13.9 s | 4.6 min | 74 min |
+| 1×H100 | 0.19 s | 4 s | ~1 min |
+
+Two things follow:
+
+- **Everything except section 4.1.5 is comfortable on CPU.** The main rollout is minutes, not
+  hours. Leave `RUN_ALL_CHECKPOINTS=True` if you are willing to wait ~45 min for the Pareto
+  sweep; set it to `False` if you are not. Nothing else in the notebook needs changing, and no
+  CUDA call in it is unguarded.
+- **More threads is not better.** 8 threads beat 64 by 1.6×; the graphs are small enough that
+  thread oversubscription costs more than the parallelism gains. If your container exposes many
+  cores, run `torch.set_num_threads(8)` after the imports cell.
+
+The dike-ring-15 section (§4.2) uses 10 simulations of roughly twice the node count, so expect
+about 3 minutes at 8 threads (extrapolated, not measured).
 
 ### On the I-GUIDE Platform
 
@@ -94,14 +117,15 @@ will run this notebook as shipped. `geoai` is the closest (it has PyTorch) but l
 in place. Build your own:
 
 ```bash
-bash setup_iguide_kernel.sh          # inspects the stock kernels, builds the env, registers the kernel
+bash setup_iguide_kernel.sh          # CPU build (default), inspects the stock kernels first
+bash setup_iguide_kernel.sh --cuda   # only if a GPU is actually present
 ```
 
 The kernel is registered as `mswegnn` because that is the kernelspec recorded in the
 notebook. The script first prints what the stock kernels contain, so if one of them turns out
-to be sufficient you can stop and just select it. Swap the torch line in `environment.yml`
-for the CPU wheel if no GPU is available — that takes the install from ~2.5 GB to ~200 MB,
-which matters against a home-directory quota.
+to be sufficient you can stop and just select it. It defaults to the CPU build, which is both
+the right choice on a hub without GPUs and ~2.5 GB smaller — that difference matters against a
+home-directory quota.
 
 ## Known issues
 
