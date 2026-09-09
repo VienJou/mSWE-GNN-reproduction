@@ -51,6 +51,16 @@ The preprocessed PyTorch Geometric datasets are far too large for git:
 | `database/datasets/train/dijkring_15.pkl` | 58 MB |
 | `database/datasets/test/dijkring_15.pkl` | 0.58 GB |
 
+Only two of the four are needed for sections 0–4.1 and 5:
+`train/multiscale_mesh_dataset.pkl` + `test/multiscale_mesh_dataset.pkl` (2.5 GB together).
+The two `dijkring_15.pkl` files (0.64 GB) are needed only for section 4.2. The
+`mesh_dataset.pkl` pair that `scripts/build_real_pickles.py` also produces is **not used by
+this notebook at all** — drop those two jobs from the script's job list to save 1.6 GB and
+about a third of the build time.
+
+Note that the **training** split is required even though the notebook never trains: the
+feature-normalisation scalers are fitted on it, so a test-only download will not work.
+
 To rebuild them:
 
 1. Download `raw_datasets_mesh.zip` (2.75 GB) and `raw_datasets_dk15.zip` (0.92 GB) from
@@ -58,8 +68,11 @@ To rebuild them:
    into `database/raw_datasets_mesh/` and `database/raw_datasets_dk15/`.
 2. Run `python scripts/build_real_pickles.py` (about 13 minutes; 3 s per simulation).
 
-Note that all four pickles are needed even though the notebook never trains: the training
-split is used to fit the feature-normalisation scalers.
+Budget the disk before starting: the two zips (3.7 GB) plus their unpacked contents
+(~8.4 GB) plus the pickles (4.5 GB) peak at roughly 16 GB if nothing is deleted along the
+way. Delete each zip right after unzipping it, and delete `database/raw_datasets_*/` once the
+pickles exist, and the peak drops to about 9 GB. On a quota-limited home directory this is
+usually the binding constraint, not the environment.
 
 ## Running the notebook
 

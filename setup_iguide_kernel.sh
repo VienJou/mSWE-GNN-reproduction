@@ -35,7 +35,13 @@ conda run -p "$ENV_PREFIX" python -m ipykernel install \
   --user --name mswegnn --display-name "Python (mswegnn)"
 
 echo "== 4. verify =="
-jupyter kernelspec list | grep -i mswegnn
+# non-fatal: `jupyter` may not be on PATH in a bare terminal even though the kernel is fine
+if command -v jupyter >/dev/null 2>&1; then
+  jupyter kernelspec list | grep -i mswegnn || echo "   not listed by jupyter; checking the path directly"
+fi
+ls -d "$HOME/.local/share/jupyter/kernels/mswegnn" 2>/dev/null \
+  && echo "   kernelspec present" \
+  || { echo "   ERROR: kernelspec was not created at ~/.local/share/jupyter/kernels/mswegnn"; exit 1; }
 cd "$REPO"
 conda run -p "$ENV_PREFIX" python - <<'PY'
 import sys, os, importlib.metadata as md
