@@ -37,10 +37,13 @@ receptive field for about 10.6 finest-scale-layer equivalents of compute).
 workflow live. Three changes, each marked `FAST VARIANT` in the code with the original line
 left commented directly above it: 3 synthetic test simulations instead of 20, the
 16-checkpoint Pareto sweep skipped (the figure is still drawn from the authors' recorded
-csv), and 2 dike-ring-15 simulations instead of 10. Its outputs are cleared, because it is
-meant to be executed. **Its metrics are computed over 3 simulations and will not match the
-paper** — quote the full notebook, run this one. 19 of the 22 code cells are byte-identical
-between the two.
+csv), and 2 dike-ring-15 simulations instead of 10. **Its metrics are computed over 3
+simulations and will not match the paper** — quote the full notebook, run this one. 19 of the
+22 code cells are byte-identical between the two.
+
+It ships with outputs from one H100 run so it can also be read as-is, but those timings are
+GPU timings: 0.47 s per simulation there against roughly 40 s on a CPU container. The
+accuracy figures are hardware-independent; re-running replaces both.
 
 **Also included**: the upstream source (`models/`, `utils/`, `training/`, `database/*.py`),
 the reference configs, all 17 pretrained checkpoints (`results/`), the authors' recorded

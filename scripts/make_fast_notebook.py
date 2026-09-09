@@ -109,6 +109,13 @@ NOTICE = f"""> ## Fast variant — read this first
 >
 > Nothing else differs: the same checkpoints, the same data pipeline, the same autoregressive
 > rollout, the same metric definitions and the same figures.
+>
+> **About the saved outputs below.** They come from one execution on a single H100, so the
+> timings and speed-up figures in them are GPU figures. On the CPU-only container this
+> variant targets, expect roughly **40 s per synthetic simulation** and **90 s per
+> dike-ring-15 simulation** — about 8 minutes end to end, against a few seconds here. The
+> accuracy numbers are hardware-independent; only the timings are not. Re-run the notebook
+> and your own outputs replace these.
 """
 nb.cells.insert(1, nbf.v4.new_markdown_cell(NOTICE))
 
