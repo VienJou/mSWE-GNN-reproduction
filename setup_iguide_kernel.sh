@@ -46,11 +46,29 @@ echo "== 1. free space in \$HOME (CUDA torch needs ~2.5 GB, CPU torch ~200 MB) =
 df -h "$HOME" | tail -1
 
 echo "== 2. build the environment =="
-conda env create -f "$ENV_FILE" -p "$ENV_PREFIX"
+# venv+pip by default: conda's solver gets OOM-killed on memory-limited hub containers
+# ("Killed" during "Collecting package metadata"). Set USE_CONDA=1 to force conda instead.
+if [ "${USE_CONDA:-0}" = "1" ]; then
+  conda env create -f "$ENV_FILE" -p "$ENV_PREFIX"
+else
+  REQ="$REPO/requirements-cpu.txt"
+  PYBIN="${PYBIN:-python}"
+  ver=$("$PYBIN" -c 'import sys;print("%d.%d"%sys.version_info[:2])' 2>/dev/null | tail -1)
+  case "$ver" in
+    3.8|3.9|3.10|3.11) : ;;
+    *) echo "   $PYBIN is python $ver; these wheels need 3.8-3.11."
+       for alt in /cvmfs/iguide.purdue.edu/software/conda/iguide-ewd/bin/python; do
+         [ -x "$alt" ] && { PYBIN="$alt"; echo "   falling back to $alt"; break; }
+       done ;;
+  esac
+  "$PYBIN" -m venv "$ENV_PREFIX"
+  "$ENV_PREFIX/bin/pip" install -q -U pip
+  "$ENV_PREFIX/bin/pip" install -r "$REQ"
+fi
 
 echo "== 3. register it as a Jupyter kernel named 'mswegnn' =="
 # The name must match the kernelspec recorded in test_pretrained_EN.ipynb.
-conda run -p "$ENV_PREFIX" python -m ipykernel install \
+"$ENV_PREFIX/bin/python" -m ipykernel install \
   --user --name mswegnn --display-name "Python (mswegnn)"
 
 echo "== 4. verify =="
@@ -62,7 +80,7 @@ ls -d "$HOME/.local/share/jupyter/kernels/mswegnn" 2>/dev/null \
   && echo "   kernelspec present" \
   || { echo "   ERROR: kernelspec was not created at ~/.local/share/jupyter/kernels/mswegnn"; exit 1; }
 cd "$REPO"
-conda run -p "$ENV_PREFIX" python - <<'PY'
+"$ENV_PREFIX/bin/python" - <<'PY'
 import sys, os, importlib.metadata as md
 sys.path.insert(0, os.getcwd())
 from utils.visualization import *

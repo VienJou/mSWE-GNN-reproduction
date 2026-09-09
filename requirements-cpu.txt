@@ -1,0 +1,37 @@
+# CPU-only pin set for test_pretrained_EN.ipynb, for use with python -m venv + pip.
+#
+# Use this instead of environment.yml when conda's solver runs out of memory, which it does
+# on memory-limited JupyterHub containers: `conda env create` gets OOM-killed while parsing
+# conda-forge repodata, reporting only "Killed". pip needs a fraction of that memory.
+#
+#   python -m venv ~/envs/mswegnn          # python must be 3.8-3.11 for these wheels
+#   source ~/envs/mswegnn/bin/activate
+#   pip install -U pip
+#   pip install -r requirements-cpu.txt
+#   python -m ipykernel install --user --name mswegnn --display-name "Python (mswegnn)"
+
+# +cpu exists only on the pytorch index, so this cannot silently resolve to the CUDA wheel
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.1.0+cpu
+
+# load-bearing: 2.1+ rejects load_from_checkpoint called on an instance, which upstream does
+lightning==2.0.9.post0
+torch_geometric==2.4.0
+
+# used by the notebook
+numpy==1.26.4
+scipy==1.11.3
+pandas==2.1.1
+matplotlib==3.8.0
+scikit-learn==1.3.2
+wandb==0.15.12
+ipykernel
+
+# import-time only: database/graph_creation.py imports these at module level, the notebook
+# itself uses just plot_faces and plot_multiscale_mesh_properties from it
+meshkernel==3.0.0
+triangle
+shapely==2.0.2
+networkx
+netCDF4==1.6.4
+xarray==2023.10.1
