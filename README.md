@@ -32,6 +32,16 @@ cost of the multi-scale U path, measured from the actual meshes (hop distances o
 91 / 185 / 371 / 739 m across the four scales, giving an 88·h₁ ≈ 8.1 km single-pass
 receptive field for about 10.6 finest-scale-layer equivalents of compute).
 
+**`test_pretrained_EN_fast.ipynb`** — the same walkthrough, trimmed to run in about
+**8 minutes on a CPU-only container** instead of roughly 4 hours, for demonstrating the
+workflow live. Three changes, each marked `FAST VARIANT` in the code with the original line
+left commented directly above it: 3 synthetic test simulations instead of 20, the
+16-checkpoint Pareto sweep skipped (the figure is still drawn from the authors' recorded
+csv), and 2 dike-ring-15 simulations instead of 10. Its outputs are cleared, because it is
+meant to be executed. **Its metrics are computed over 3 simulations and will not match the
+paper** — quote the full notebook, run this one. 19 of the 22 code cells are byte-identical
+between the two.
+
 **Also included**: the upstream source (`models/`, `utils/`, `training/`, `database/*.py`),
 the reference configs, all 17 pretrained checkpoints (`results/`), the authors' recorded
 result tables (`*.csv`), the paper figures used in the notebook (`paper_figures/embed/`),
