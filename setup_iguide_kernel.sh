@@ -5,6 +5,9 @@
 #   bash setup_iguide_kernel.sh --cuda          # CUDA build, only if a GPU is actually present
 #   bash setup_iguide_kernel.sh [--cuda] PREFIX # install somewhere other than ~/envs/mswegnn
 set -euo pipefail
+# pydevd prints "Debugger warning:" lines on STDOUT, which corrupts command
+# substitution; the warning itself tells you to set this.
+export PYDEVD_DISABLE_FILE_VALIDATION=1
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="$REPO/environment-cpu.yml"
 if [ "${1:-}" = "--cuda" ]; then ENV_FILE="$REPO/environment.yml"; shift; fi
@@ -21,20 +24,20 @@ if command -v jupyter >/dev/null 2>&1; then
   jupyter kernelspec list 2>/dev/null | awk 'NR>1 && NF>=2 {print $1" "$2}' | while read -r name dir; do
     kj="$dir/kernel.json"
     [ -f "$kj" ] || continue
-    py=$(python -c "import json;a=json.load(open('$kj'))['argv'];print(a[0])" 2>/dev/null || true)
-    [ -n "$py" ] && [ -x "$py" ] || continue
+    py=$(python -c "import json;print(json.load(open('$kj'))['argv'][0])" 2>/dev/null | tail -1)
+    [ -n "$py" ] && [ -x "$py" ] || { printf "   %-24s (interpreter not directly runnable)\n" "$name"; continue; }
     out=$("$py" - <<'PYQ' 2>/dev/null || true
 import importlib.metadata as md
 got = []
 for p in ("torch", "torch_geometric", "lightning"):
     try: got.append(f"{p}={md.version(p)}")
     except Exception: pass
-print("  ".join(got) if got else "")
+print(" ".join(got) if got else "-")
 PYQ
 )
-    [ -n "$out" ] && printf "   %-24s %s\n" "$name" "$out"
+    printf "   %-24s %s\n" "$name" "${out:--}"
   done
-  echo "   (kernels printing nothing have none of torch / torch_geometric / lightning)"
+  echo "   A dash means the kernel has none of torch / torch_geometric / lightning."
 else
   echo "   jupyter not on PATH; skipping the survey"
 fi
