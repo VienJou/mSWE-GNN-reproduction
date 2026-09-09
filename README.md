@@ -63,15 +63,45 @@ split is used to fit the feature-normalisation scalers.
 
 ## Running the notebook
 
+`environment.yml` pins the exact set the notebook was executed with, reduced to what it
+actually needs:
+
 ```bash
-conda create -n mswegnn python=3.10
-conda activate mswegnn
-pip install -r requirements.txt      # lightning must be 2.0.9.post0, see below
+conda env create -f environment.yml -p ~/envs/mswegnn
+conda activate ~/envs/mswegnn
 jupyter lab test_pretrained_EN.ipynb
 ```
 
-The whole notebook takes about 20–25 minutes on one H100. Set `RUN_ALL_CHECKPOINTS=False`
-in section 4.1.5 to skip the 16-checkpoint sweep, which is slow on CPU.
+Two things about that file are worth knowing before you substitute your own:
+
+- **`lightning` must be exactly 2.0.9.post0.** The upstream code calls
+  `plmodule.load_from_checkpoint(...)` on an *instance*, which 2.1+ rejects with a `TypeError`.
+- **`torch_scatter` / `torch_sparse` / `pyg_lib` are not needed.** This model runs on PyG
+  2.4's pure-torch paths, which removes the part of a PyG install most likely to fail.
+  `meshkernel`, `triangle`, `netCDF4`, `xarray`, `shapely` and `networkx` are needed only so
+  that `database/graph_creation.py` imports; the notebook uses just two plotting functions
+  from it.
+
+The whole notebook takes about 20–25 minutes on one H100. On CPU, set
+`RUN_ALL_CHECKPOINTS=False` in section 4.1.5 to skip the 16-checkpoint sweep; the rest is
+tolerable.
+
+### On the I-GUIDE Platform
+
+None of the stock kernels on the [I-GUIDE Platform](https://platform.i-guide.io/) JupyterHub
+will run this notebook as shipped. `geoai` is the closest (it has PyTorch) but lacks
+`torch_geometric`, and the kernels live on a read-only CVMFS mount, so they cannot be patched
+in place. Build your own:
+
+```bash
+bash setup_iguide_kernel.sh          # inspects the stock kernels, builds the env, registers the kernel
+```
+
+The kernel is registered as `mswegnn` because that is the kernelspec recorded in the
+notebook. The script first prints what the stock kernels contain, so if one of them turns out
+to be sufficient you can stop and just select it. Swap the torch line in `environment.yml`
+for the CPU wheel if no GPU is available — that takes the install from ~2.5 GB to ~200 MB,
+which matters against a home-directory quota.
 
 ## Known issues
 
@@ -82,7 +112,7 @@ in section 4.1.5 to skip the 16-checkpoint sweep, which is slow on CPU.
   `*_dataset2` dataset variants used in the authors' own notebook. Section 6 of the
   notebook records this in full.
 - **`lightning` must be pinned to 2.0.9.post0.** Version ≥2.1 raises a `TypeError` because
-  `plmodule.load_from_checkpoint` is called on an instance.
+  `plmodule.load_from_checkpoint` is called on an instance. `environment.yml` pins it.
 - **The SLURM scripts in `scripts/` were written for one specific cluster.** Absolute paths
   have been replaced by paths resolved from the script location and by `conda activate
   mswegnn`, but the partition names, account and resource requests still need editing.
