@@ -155,12 +155,15 @@ home-directory quota.
 
 ## Known issues
 
-- **Water-depth RMSE does not reproduce exactly.** The flood-extent metrics match the
-  authors' records closely (CSI₀.₀₅ 0.803 here versus 0.830 recorded), but the depth RMSE
-  is 0.084 m against the recorded 0.050 m. The cause has not been identified; candidates
-  are the pickles being rebuilt with meshkernel 3.0.0, mixed precision, and the
-  `*_dataset2` dataset variants used in the authors' own notebook. Section 6 of the
-  notebook records this in full.
+- **Flood extent reproduces to about 3 %**: CSI₀.₀₅ 0.803 here against the 0.830 recorded by
+  the authors, CSI₀.₃ 0.658 against 0.687. The likeliest cause is that the pickles were
+  rebuilt with meshkernel 3.0.0, so the coarse meshes may differ slightly. Not verified.
+- **Depth error reproduces to about 2 %**, once compared like with like. The column named
+  `test roll loss WD` in `overview_MSGNN.csv` holds an **MAE**, not an RMSE, despite its name
+  and despite `config.yaml` setting `type_loss: RMSE`: over all 16 checkpoints our MAE differs
+  from it by 0.0030 on average (ratio 1.00) while our RMSE differs by 0.0367 (ratio 1.60,
+  which is exactly our own RMSE/MAE ratio). An earlier version of this README reported the
+  depth error as not reproducing; that was our comparison error, not the authors'.
 - **`lightning` must be pinned to 2.0.9.post0.** Version ≥2.1 raises a `TypeError` because
   `plmodule.load_from_checkpoint` is called on an instance. `environment.yml` pins it.
 - **The SLURM scripts in `scripts/` were written for one specific cluster.** Absolute paths
