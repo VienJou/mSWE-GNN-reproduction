@@ -17,6 +17,9 @@ checkpoints without any training.
 outputs and figures are saved, so it can be read end to end without running anything. Its 61
 cells interleave two layers of content in the order the paper is written:
 
+0. **How to run it** (section 0.0) — building the kernel on the I-GUIDE Platform and why conda
+   cannot be used there, rebuilding the 3.1 GB of data from Zenodo, what each section costs on
+   CPU against a GPU, and the three numbers to check to know it worked.
 1. **Paper walkthrough** — the research problem and the four gaps of the earlier SWE-GNN,
    the method (multi-scale mesh and graph, encoder/processor/decoder, ghost-cell boundary
    conditions, rotation-invariant inputs, loss and curriculum learning), the experimental
